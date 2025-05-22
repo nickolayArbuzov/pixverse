@@ -19,6 +19,7 @@ services:
       - app_network
     volumes:
       - ./backend:/app
+      - ./backend/.env:/app/.env
 
   postgres:
     image: postgres:15
