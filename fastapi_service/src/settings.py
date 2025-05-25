@@ -30,7 +30,6 @@ class RabbitMQSettings(BaseSettings):
         return self.RABBITMQ_URL
 
     class Config:
-        env_file = ".env"
         extra = "ignore"
 
 

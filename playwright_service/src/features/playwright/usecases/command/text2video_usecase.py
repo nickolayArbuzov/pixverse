@@ -1,5 +1,6 @@
 import uuid
 from playwright.async_api import async_playwright
+from src.settings import pixverse_credentials
 from src.features.outbox.repositories import OutboxCommandRepository
 
 
@@ -15,16 +16,43 @@ class Text2VideoUseCase:
     async def execute(self, command: Text2VideoCommand):
         video_id = command.payload["video_id"]
         prompt = command.payload["prompt"]
-        app_bundle_id = command.payload.get("app_bundle_id")
-        apphud_user_id = command.payload.get("apphud_user_id")
 
         try:
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(headless=True)
-                page = await browser.new_page()
-                await page.goto("https://app.pixverse.ai/home")
-                content = await page.content()
-                print(content[:500])
+                context = await browser.new_context()
+                page = await context.new_page()
+
+                await page.goto(
+                    "https://app.pixverse.ai/onboard", wait_until="domcontentloaded"
+                )
+                print("Page loaded:", await page.title())
+
+                await page.locator("button:has(span:text-is('Login'))").first.click()
+                print("Clicked Login")
+
+                await page.wait_for_selector("#Username")
+                await page.fill("#Username", pixverse_credentials.PIXVERSE_USERNAME)
+                print("Entered username")
+
+                await page.wait_for_selector("#Password")
+                await page.fill("#Password", pixverse_credentials.PIXVERSE_PASSWORD)
+                print("Entered password")
+
+                await page.locator("button:has(span:text-is('Login'))").first.click()
+                print("Clicked Login")
+                await page.wait_for_selector(
+                    'textarea[placeholder="Describe the content you want to create"]'
+                )
+                await page.fill(
+                    'textarea[placeholder="Describe the content you want to create"]',
+                    prompt,
+                )
+                print("Prompt filled")
+                await page.locator("button:has(span:text-is('Create'))").first.click()
+                print("Create button clicked")
+                await page.wait_for_selector("text=Video ready", timeout=60000)
+                print("Video is ready!")
                 await browser.close()
 
             outbox_event = {
@@ -32,15 +60,13 @@ class Text2VideoUseCase:
                 "routing_key": "main.events",
                 "payload": {
                     "video_id": video_id,
-                    "url": url,
+                    "url": "url",
                     "status": "ready",
-                    "app_bundle_id": app_bundle_id,
-                    "apphud_user_id": apphud_user_id,
                     "event_id": str(uuid.uuid4()),
                 },
                 "processed": False,
             }
-            await self.outbox_repository.Save(outbox_event)
+            await self.outbox_repository.save(outbox_event)
 
         except Exception as e:
             outbox_event = {
@@ -49,8 +75,6 @@ class Text2VideoUseCase:
                 "payload": {
                     "video_id": video_id,
                     "status": "error",
-                    "app_bundle_id": app_bundle_id,
-                    "apphud_user_id": apphud_user_id,
                     "event_id": str(uuid.uuid4()),
                     "error": str(e),
                 },

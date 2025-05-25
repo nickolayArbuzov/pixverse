@@ -33,10 +33,11 @@ async def on_message(msg: IncomingMessage):
                     return
 
                 await command_repo.save(InboxModel(event_id=event_id, payload=payload))
-
-                usecase_class = USECASE_MAP.get(event_type)
-                if usecase_class:
-                    await usecase_class(session).execute(payload)
+                usecase_entry = USECASE_MAP.get(event_type)
+                if usecase_entry:
+                    usecase_class, command_class = usecase_entry
+                    command = command_class(payload)
+                    await usecase_class(session).execute(command)
                 else:
                     print(f"Unknown event type: {event_type}")
 

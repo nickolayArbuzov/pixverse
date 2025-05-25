@@ -25,13 +25,19 @@ postgresql_settings = PostgresqlSettings()
 class RabbitMQSettings(BaseSettings):
     RABBITMQ_URL: str
 
-    @property
-    def rabbitmq_url(self) -> str:
-        return self.RABBITMQ_URL
-
     class Config:
-        env_file = ".env"
         extra = "ignore"
 
 
 rabbitmq_settings = RabbitMQSettings()
+
+
+class PixVerseCredentials(BaseSettings):
+    PIXVERSE_USERNAME: str
+    PIXVERSE_PASSWORD: str
+
+    class Config:
+        extra = "ignore"
+
+
+pixverse_credentials = PixVerseCredentials()

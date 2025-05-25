@@ -6,7 +6,6 @@ class InboxCommandRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def save(self, inbox_data: InboxModel) -> None:
-        inbox_model = InboxModel(**inbox_data)
+    async def save(self, inbox_model: InboxModel) -> None:
         self.session.add(inbox_model)
         await self.session.flush()

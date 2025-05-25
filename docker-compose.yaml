@@ -29,6 +29,8 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      PIXVERSE_USERNAME: ${PIXVERSE_USERNAME}
+      PIXVERSE_PASSWORD: ${PIXVERSE_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

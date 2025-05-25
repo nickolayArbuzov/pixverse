@@ -8,13 +8,15 @@ from src.features.inbox.repositories import (
 )
 from src.features.playwright.usecases.command import (
     Text2VideoUseCase,
+    Text2VideoCommand,
     Image2VideoUseCase,
+    Image2VideoCommand,
 )
 from src.features.inbox.inbox_model import InboxModel
 
 USECASE_MAP = {
-    "text2video.requested": Text2VideoUseCase,
-    "image2video.requested": Image2VideoUseCase,
+    "text2video.requested": (Text2VideoUseCase, Text2VideoCommand),
+    "image2video.requested": (Image2VideoUseCase, Image2VideoCommand),
 }
 
 
@@ -22,10 +24,10 @@ async def on_message(msg: IncomingMessage):
     async with msg.process(requeue=True):
         try:
             body = json.loads(msg.body)
+
             event_type = body.get("event_type")
             payload = body.get("payload")
             event_id = payload.get("event_id") if payload else None
-
             if not (event_type and event_id):
                 print("Malformed message, skipping.")
                 return
@@ -40,10 +42,11 @@ async def on_message(msg: IncomingMessage):
                     return
 
                 await command_repo.save(InboxModel(event_id=event_id, payload=payload))
-
-                usecase_class = USECASE_MAP.get(event_type)
-                if usecase_class:
-                    await usecase_class(session).execute(payload)
+                usecase_entry = USECASE_MAP.get(event_type)
+                if usecase_entry:
+                    usecase_class, command_class = usecase_entry
+                    command = command_class(payload)
+                    await usecase_class(session).execute(command)
                 else:
                     print(f"Unknown event type: {event_type}")
 
