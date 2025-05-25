@@ -1,0 +1,10 @@
+aio_pika
+alembic
+asyncpg
+fastapi
+httpx
+psycopg2-binary
+pydantic-settings
+redis
+sqlalchemy
+uvicorn

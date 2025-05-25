@@ -45,7 +45,7 @@ docker-compose up
 
 ## 🚀 What Will Be Launched
 
-> 📌 **Make sure ports** `5000`, `5050`, `5432`, `6379`, `8081` are available on your machine.
+> 📌 **Make sure ports** `5000`, `5050`, `5432` are available on your machine.
 
 ---
 
