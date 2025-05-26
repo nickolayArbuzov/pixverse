@@ -39,13 +39,13 @@ docker-compose up
 
 ## 🚀 What Will Be Launched
 
-- <img src="https://raw.githubusercontent.com/github/explore/main/topics/fastapi/fastapi.png" alt="FastAPI" width="16" height="16" /> **FastAPI app** — [http://localhost:5000](http://localhost:5000)
+- <img src="https://raw.githubusercontent.com/github/explore/main/topics/fastapi/fastapi.png" alt="FastAPI" width="16" height="16" /> **FastAPI app** — [http://localhost:8000](http://localhost:8000)
 - <img src="https://raw.githubusercontent.com/github/explore/main/topics/postgresql/postgresql.png" alt="PostgreSQL" width="16" /> **PostgreSQL database** — accessible on port `5432`
 - <img src="https://raw.githubusercontent.com/github/explore/main/topics/postgresql/postgresql.png" alt="PostgreSQL" width="16" /> **pgAdmin dashboard** — [http://localhost:5050](http://localhost:5050)
 
 ## 🚀 What Will Be Launched
 
-> 📌 **Make sure ports** `5000`, `5050`, `5432` are available on your machine.
+> 📌 **Make sure ports** `8000`, `5050`, `5432` are available on your machine.
 
 ---
 
