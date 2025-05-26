@@ -28,7 +28,9 @@ class Text2VideoUseCase:
                 )
                 print("Page loaded:", await page.title())
 
-                await page.locator("button:has(span:text-is('Login'))").first.click()
+                login_button = page.locator("button:has(span:text-is('Login'))").first
+                await login_button.evaluate("el => el.innerText")
+                await login_button.click(force=True)
                 print("Clicked Login")
 
                 await page.wait_for_selector("#Username")
@@ -39,20 +41,31 @@ class Text2VideoUseCase:
                 await page.fill("#Password", pixverse_credentials.PIXVERSE_PASSWORD)
                 print("Entered password")
 
-                await page.locator("button:has(span:text-is('Login'))").first.click()
+                login_button = page.locator("button:has(span:text-is('Login'))").first
+                await login_button.evaluate("el => el.innerText")
+                await login_button.click(force=True)
                 print("Clicked Login")
-                await page.wait_for_selector(
+
+                textareas = page.locator(
                     'textarea[placeholder="Describe the content you want to create"]'
                 )
-                await page.fill(
-                    'textarea[placeholder="Describe the content you want to create"]',
-                    prompt,
-                )
+                count = await textareas.count()
+
+                for i in range(count):
+                    el = textareas.nth(i)
+                    if await el.is_visible():
+                        print(f"✅ Using visible textarea #{i}")
+                        await el.fill(prompt)
+                        break
                 print("Prompt filled")
-                await page.locator("button:has(span:text-is('Create'))").first.click()
+
+                create_button = page.locator("button:has(span:text-is('Create'))").first
+                await create_button.evaluate("el => el.innerText")
+                await create_button.click(force=True)
                 print("Create button clicked")
-                await page.wait_for_selector("text=Video ready", timeout=60000)
-                print("Video is ready!")
+
+                #await page.wait_for_selector("text=Video ready", timeout=60000)
+                #print("Video is ready!")
                 await browser.close()
 
             outbox_event = {
