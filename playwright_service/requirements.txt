@@ -1,5 +1,6 @@
 aio_pika
 aiofiles
+aiohttp
 alembic
 asyncpg
 fastapi

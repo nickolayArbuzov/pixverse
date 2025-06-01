@@ -1,8 +1,9 @@
-import uuid
+import aiohttp
 from playwright.async_api import async_playwright
-from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.settings import pixverse_credentials
+from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.features.outbox.repositories import OutboxCommandRepository
+from src.features.playwright.repositories import FileAdapter
 
 
 class Text2VideoCommand:
@@ -11,15 +12,19 @@ class Text2VideoCommand:
 
 
 class Text2VideoUseCase:
-    def __init__(self, outbox_repository: OutboxCommandRepository):
+    def __init__(
+        self, outbox_repository: OutboxCommandRepository, file_adapter: FileAdapter
+    ):
         self.outbox_repository = outbox_repository
+        self.file_adapter = file_adapter
 
     async def execute(self, command: Text2VideoCommand):
         video_id = command.payload["video_id"]
         prompt = command.payload["prompt"]
-        print("------------------------------------------", video_id)
+        video_path = command.payload["future_video_path_in_container"]
+        video_filename = video_path.split("/")[-1]
+
         try:
-            """
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(headless=True)
                 context = await browser.new_context()
@@ -28,56 +33,42 @@ class Text2VideoUseCase:
                 await page.goto(
                     "https://app.pixverse.ai/onboard", wait_until="domcontentloaded"
                 )
-                print("Page loaded:", await page.title())
 
-                login_button = page.locator("button:has(span:text-is('Login'))").first
-                await login_button.evaluate("el => el.innerText")
-                await login_button.click(force=True)
-                print("Clicked Login")
-
-                await page.wait_for_selector("#Username")
+                await page.click("button:has(span:text-is('Login'))")
                 await page.fill("#Username", pixverse_credentials.PIXVERSE_USERNAME)
-                print("Entered username")
-
-                await page.wait_for_selector("#Password")
                 await page.fill("#Password", pixverse_credentials.PIXVERSE_PASSWORD)
-                print("Entered password")
+                await page.click("button:has(span:text-is('Login'))")
+                await page.wait_for_selector("text=Create")
 
-                login_button = page.locator("button:has(span:text-is('Login'))").first
-                await login_button.evaluate("el => el.innerText")
-                await login_button.click(force=True)
-                print("Clicked Login")
-
-                textareas = page.locator(
+                textarea = page.locator(
                     'textarea[placeholder="Describe the content you want to create"]'
                 )
-                count = await textareas.count()
+                await textarea.fill(prompt)
 
-                for i in range(count):
-                    el = textareas.nth(i)
-                    if await el.is_visible():
-                        print(f"Using visible textarea #{i}")
-                        await el.fill(prompt)
-                        break
-                print("Prompt filled")
+                await page.click("button:has(span:text-is('Create'))")
 
-                create_button = page.locator("button:has(span:text-is('Create'))").first
-                await create_button.evaluate("el => el.innerText")
-                await create_button.click(force=True)
-                print("Create button clicked")
+                await page.wait_for_selector("video source", timeout=120_000)
+                video_url = await page.locator("video source").get_attribute("src")
+                print(f"Video URL: {video_url}")
 
-                #await page.wait_for_selector("text=Video ready", timeout=60000)
-                #print("Video is ready!")
                 await browser.close()
-            """
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(video_url) as resp:
+
+                    class StreamFile:
+                        async def read(self, size: int = 1024 * 1024):
+                            return await resp.content.read(size)
+
+                    await self.file_adapter.write_file(video_filename, StreamFile())
+
             outbox_data = build_outbox_event(
                 event_type="text2video.generated",
                 routing_key="main.events",
                 video_id=video_id,
                 status="ready",
-                extra_payload={"url": "url"},
+                extra_payload={"url": video_path},
             )
-
             await self.outbox_repository.save(outbox_data)
 
         except Exception as e:
@@ -89,5 +80,5 @@ class Text2VideoUseCase:
                 extra_payload={"error": str(e)},
             )
             await self.outbox_repository.save(outbox_data)
-            print(f"Error in playwright flow: {e}")
+            print(f"Error in text2video flow: {e}")
             raise
