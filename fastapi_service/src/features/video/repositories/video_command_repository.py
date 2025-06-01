@@ -9,7 +9,7 @@ class VideoCommandRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def text_2_video(self, video: VideoInDB) -> Video:
+    async def request_video(self, video: VideoInDB) -> Video:
         result = (
             await self.session.execute(
                 insert(Video).values(**video.model_dump()).returning(Video)
@@ -17,10 +17,12 @@ class VideoCommandRepository:
         ).scalar()
         return result
 
-    async def image_2_video(self, video: VideoInDB) -> Video:
-        result = (
-            await self.session.execute(
-                insert(Video).values(**video.model_dump()).returning(Video)
+    async def update_status_and_url(self, video_id: str, status: str, url: str | None):
+        await self.session.execute(
+            (
+                update(Video)
+                .where(Video.id == video_id)
+                .values(status=status, url=url)
+                .execution_options(synchronize_session="fetch")
             )
-        ).scalar()
-        return result
+        )

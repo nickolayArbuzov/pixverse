@@ -15,6 +15,11 @@ async def session_scope(async_session_maker) -> AsyncGenerator[AsyncSession, Non
             raise
 
 
-async def get_db():
+async def get_read_db():
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
+async def get_write_db():
     async with session_scope(AsyncSessionLocal) as session:
         yield session

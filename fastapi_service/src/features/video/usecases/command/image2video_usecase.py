@@ -1,5 +1,6 @@
 import uuid
 from fastapi import UploadFile
+from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.features.video.repositories import VideoCommandRepository, FileAdapter
 from src.features.video.video_schema import InputVideoImageRequest, VideoInDB
 from src.features.outbox.repositories import OutboxCommandRepository
@@ -26,7 +27,7 @@ class Image2VideoUseCase:
         video_id = str(uuid.uuid4())
         image_filename = f"{video_id}.png"
         image_path = f"/shared/{image_filename}"
-        future_video_path = f"/shared/{video_id}.mp4"
+        future_video_path_in_container = f"/shared/{video_id}.mp4"
 
         video_to_create = VideoInDB(
             id=video_id,
@@ -34,22 +35,21 @@ class Image2VideoUseCase:
             apphud_user_id=command.video_request.apphud_user_id,
             prompt=command.video_request.prompt,
             status="requested",
-            video_url=future_video_path,
+            video_url=None,
         )
-        video = await self.video_repository.image_2_video(video_to_create)
+        video = await self.video_repository.request_video(video_to_create)
 
-        outbox_data = {
-            "event_type": "image2video.requested",
-            "routing_key": "playwright.events",
-            "payload": {
-                "video_id": str(video.id),
-                "prompt": video.prompt,
+        outbox_data = build_outbox_event(
+            event_type="image2video.requested",
+            routing_key="playwright.events",
+            video_id=video.id,
+            prompt=video.prompt,
+            future_video_path_in_container=future_video_path_in_container,
+            extra_payload={
                 "image_path": image_path,
-                "video_output_path": future_video_path,
-                "event_id": str(uuid.uuid4()),
             },
-            "processed": False,
-        }
+        )
+
         await self.outbox_repository.save(outbox_data)
 
         await self.file_adapter.write_file(filename=image_filename, file=command.file)

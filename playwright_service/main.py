@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.broker.subscriber import start_consumer
 from src.features.outbox.cron import run_outbox_publisher
 from src.database import Base, engine
-from src.features.playwright import playwright_model
 from src.features.outbox import outbox_model
 from src.features.inbox import inbox_model
 

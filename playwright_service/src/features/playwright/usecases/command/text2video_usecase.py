@@ -1,5 +1,6 @@
 import uuid
 from playwright.async_api import async_playwright
+from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.settings import pixverse_credentials
 from src.features.outbox.repositories import OutboxCommandRepository
 
@@ -55,7 +56,7 @@ class Text2VideoUseCase:
                 for i in range(count):
                     el = textareas.nth(i)
                     if await el.is_visible():
-                        print(f"✅ Using visible textarea #{i}")
+                        print(f"Using visible textarea #{i}")
                         await el.fill(prompt)
                         break
                 print("Prompt filled")
@@ -69,31 +70,24 @@ class Text2VideoUseCase:
                 #print("Video is ready!")
                 await browser.close()
             """
-            outbox_event = {
-                "event_type": "text2video.generated",
-                "routing_key": "main.events",
-                "payload": {
-                    "video_id": video_id,
-                    "url": "url",
-                    "status": "ready",
-                    "event_id": str(uuid.uuid4()),
-                },
-                "processed": False,
-            }
-            await self.outbox_repository.save(outbox_event)
+            outbox_data = build_outbox_event(
+                event_type="text2video.generated",
+                routing_key="main.events",
+                video_id=video_id,
+                status="ready",
+                extra_payload={"url": "url"},
+            )
+
+            await self.outbox_repository.save(outbox_data)
 
         except Exception as e:
-            outbox_event = {
-                "event_type": "text2video.failed",
-                "routing_key": "main.events",
-                "payload": {
-                    "video_id": video_id,
-                    "status": "error",
-                    "event_id": str(uuid.uuid4()),
-                    "error": str(e),
-                },
-                "processed": False,
-            }
-            await self.outbox_repository.save(outbox_event)
+            outbox_data = build_outbox_event(
+                event_type="text2video.failed",
+                routing_key="main.events",
+                video_id=video_id,
+                status="error",
+                extra_payload={"error": str(e)},
+            )
+            await self.outbox_repository.save(outbox_data)
             print(f"Error in playwright flow: {e}")
             raise

@@ -1,5 +1,12 @@
 import json
 from aio_pika import IncomingMessage
+from src.features.video.repositories import VideoCommandRepository
+from src.features.video.usecases.command import (
+    MarkVideoReadyUseCase,
+    MarkVideoReadyCommand,
+    MarkVideoErrorUseCase,
+    MarkVideoErrorCommand,
+)
 from src.dependencies import session_scope
 from src.database import AsyncSessionLocal
 from src.features.inbox.repositories import (
@@ -8,7 +15,10 @@ from src.features.inbox.repositories import (
 )
 from src.features.inbox.inbox_model import InboxModel
 
-USECASE_MAP = {}
+USECASE_MAP = {
+    "text2video.generated": (MarkVideoReadyUseCase, MarkVideoReadyCommand),
+    "text2video.failed": (MarkVideoErrorUseCase, MarkVideoErrorCommand),
+}
 
 
 async def on_message(msg: IncomingMessage):
@@ -37,7 +47,9 @@ async def on_message(msg: IncomingMessage):
                 if usecase_entry:
                     usecase_class, command_class = usecase_entry
                     command = command_class(payload)
-                    await usecase_class(session).execute(command)
+                    await usecase_class(
+                        video_repository=VideoCommandRepository(session)
+                    ).execute(command)
                 else:
                     print(f"Unknown event type: {event_type}")
 
