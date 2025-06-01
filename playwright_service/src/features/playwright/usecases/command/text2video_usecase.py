@@ -16,8 +16,9 @@ class Text2VideoUseCase:
     async def execute(self, command: Text2VideoCommand):
         video_id = command.payload["video_id"]
         prompt = command.payload["prompt"]
-
+        print("------------------------------------------", video_id)
         try:
+            """
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(headless=True)
                 context = await browser.new_context()
@@ -67,7 +68,7 @@ class Text2VideoUseCase:
                 #await page.wait_for_selector("text=Video ready", timeout=60000)
                 #print("Video is ready!")
                 await browser.close()
-
+            """
             outbox_event = {
                 "event_type": "text2video.generated",
                 "routing_key": "main.events",

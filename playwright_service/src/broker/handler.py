@@ -1,5 +1,6 @@
 import json
 from aio_pika import IncomingMessage
+from src.features.outbox.repositories import OutboxCommandRepository
 from src.dependencies import session_scope
 from src.database import AsyncSessionLocal
 from src.features.inbox.repositories import (
@@ -46,7 +47,9 @@ async def on_message(msg: IncomingMessage):
                 if usecase_entry:
                     usecase_class, command_class = usecase_entry
                     command = command_class(payload)
-                    await usecase_class(session).execute(command)
+                    await usecase_class(
+                        outbox_repository=OutboxCommandRepository(session)
+                    ).execute(command)
                 else:
                     print(f"Unknown event type: {event_type}")
 

@@ -25,10 +25,6 @@ postgresql_settings = PostgresqlSettings()
 class RabbitMQSettings(BaseSettings):
     RABBITMQ_URL: str
 
-    @property
-    def rabbitmq_url(self) -> str:
-        return self.RABBITMQ_URL
-
     class Config:
         extra = "ignore"
 

@@ -17,6 +17,7 @@ services:
         condition: service_healthy
     volumes:
       - ./fastapi_service:/app
+      - shared_data:/shared
 
   playwright-service:
     build: ./playwright_service
@@ -38,6 +39,7 @@ services:
         condition: service_healthy
     volumes:
       - ./playwright_service:/app
+      - shared_data:/shared
   
   postgres:
     image: postgres:16-alpine
@@ -83,6 +85,7 @@ services:
 
 volumes:
   postgres_data:
+  shared_data:
 
 networks:
   app_network:

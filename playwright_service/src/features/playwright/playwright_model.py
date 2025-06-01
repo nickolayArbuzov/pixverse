@@ -11,6 +11,5 @@ class Video(TimestampMixin, Base):
     app_bundle_id = Column(String)
     apphud_user_id = Column(String)
     prompt = Column(String)
-    image_to_generate = Column(String)
     status = Column(String)
     url = Column(String)

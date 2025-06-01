@@ -1,10 +1,12 @@
 aio_pika
+aiofiles
 alembic
 asyncpg
 fastapi
 httpx
 psycopg2-binary
 pydantic-settings
+python-multipart
 redis
 sqlalchemy
 uvicorn

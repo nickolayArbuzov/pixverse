@@ -6,7 +6,6 @@ class CreateVideo(BaseModel):
     app_bundle_id: str = Field(...)
     apphud_user_id: str = Field(...)
     prompt: str = Field(...)
-    image_to_generate: str = Field(...)
     status: str = Field(...)
     url: str = Field(...)
 
@@ -22,7 +21,6 @@ class Video(BaseModel):
     app_bundle_id: str
     apphud_user_id: str
     prompt: str
-    image_to_generate: str
     status: str
     url: str
 
