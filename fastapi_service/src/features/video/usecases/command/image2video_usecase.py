@@ -27,7 +27,6 @@ class Image2VideoUseCase:
         video_id = str(uuid.uuid4())
         image_filename = f"{video_id}.png"
         image_path = f"/shared/{image_filename}"
-        future_video_path_in_container = f"/shared/{video_id}.mp4"
 
         video_to_create = VideoInDB(
             id=video_id,
@@ -44,7 +43,6 @@ class Image2VideoUseCase:
             routing_key="playwright.events",
             video_id=video.id,
             prompt=video.prompt,
-            future_video_path_in_container=future_video_path_in_container,
             extra_payload={
                 "image_path": image_path,
             },

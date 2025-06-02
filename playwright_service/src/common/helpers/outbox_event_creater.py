@@ -8,8 +8,9 @@ def build_outbox_event(
     routing_key: str,
     video_id: UUID,
     status: str,
-    extra_payload: dict,
+    extra_payload: Optional[dict] = None,
 ) -> dict:
+    extra_payload = extra_payload or {}
     return {
         "event_type": event_type,
         "routing_key": routing_key,

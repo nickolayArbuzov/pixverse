@@ -21,7 +21,6 @@ class Text2VideoUseCase:
 
     async def execute(self, command: Text2VideoCommand):
         video_id = str(uuid.uuid4())
-        future_video_path_in_container = f"/shared/{video_id}.mp4"
 
         video_to_create = VideoInDB(
             id=video_id,
@@ -34,11 +33,10 @@ class Text2VideoUseCase:
         video = await self.video_repository.request_video(video_to_create)
 
         outbox_data = build_outbox_event(
-            event_type="image2video.requested",
+            event_type="text2video.requested",
             routing_key="playwright.events",
             video_id=video.id,
             prompt=video.prompt,
-            future_video_path_in_container=future_video_path_in_container,
         )
 
         await self.outbox_repository.save(outbox_data)

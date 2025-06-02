@@ -1,7 +1,9 @@
+from pathlib import Path
+import asyncio
 import os
-import aiohttp
 import tempfile
 from playwright.async_api import async_playwright
+from src.common.helpers import catch_video_id
 from src.settings import pixverse_credentials
 from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.features.outbox.repositories import OutboxCommandRepository
@@ -24,9 +26,7 @@ class Image2VideoUseCase:
         video_id = command.payload["video_id"]
         prompt = command.payload.get("prompt")
         image_path = command.payload["image_path"]
-        video_path = command.payload["future_video_path_in_container"]
-        video_filename = video_path.split("/")[-1]
-
+        video_id_future = asyncio.get_running_loop().create_future()
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_image:
                 async for chunk in self.file_adapter.read_file(
@@ -34,54 +34,79 @@ class Image2VideoUseCase:
                 ):
                     tmp_image.write(chunk)
                 tmp_image_path = tmp_image.name
+
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(headless=True)
-                context = await browser.new_context()
+                context = await browser.new_context(accept_downloads=True)
                 page = await context.new_page()
-
+                page.on(
+                    "response",
+                    lambda res: asyncio.create_task(
+                        catch_video_id(res, video_id_future)
+                    ),
+                )
                 await page.goto(
                     "https://app.pixverse.ai/onboard", wait_until="domcontentloaded"
                 )
 
-                await page.click("button:has(span:text-is('Login'))")
+                await page.click(
+                    "button:has(span:text-is('Login')), button:has(span:text-is('Вход'))"
+                )
                 await page.fill("#Username", pixverse_credentials.PIXVERSE_USERNAME)
                 await page.fill("#Password", pixverse_credentials.PIXVERSE_PASSWORD)
-                await page.click("button:has(span:text-is('Login'))")
-                await page.wait_for_selector("text=Create")
+                await page.click(
+                    "button:has(span:text-is('Login')), button:has(span:text-is('Вход'))"
+                )
+                await page.wait_for_selector("text=Create, text=Создать")
 
-                input_file = page.locator('input[type="file"]').first
-                await input_file.set_input_files(tmp_image_path)
-                print(f"Image uploaded: {tmp_image_path}")
-
+                textarea = page.locator(
+                    'textarea[placeholder="Describe the content you want to create"], textarea[placeholder="Опишите контент, который хотите создать"]'
+                )
                 if prompt:
-                    textarea = page.locator(
-                        'textarea[placeholder="Describe the content you want to create"]'
-                    )
                     await textarea.fill(prompt)
 
-                await page.click("button:has(span:text-is('Create'))")
+                inputs = page.locator("div.ant-upload-drag input[type='file']")
+                count = await inputs.count()
+                for i in range(count):
+                    try:
+                        await inputs.nth(i).set_input_files(tmp_image_path)
+                        print(f"Файл загружен через input #{i}")
+                        break
+                    except Exception as e:
+                        print(f"input #{i} не сработал: {e}")
 
-                await page.wait_for_selector("video source", timeout=120_000)
-                video_url = await page.locator("video source").get_attribute("src")
-                print(f"Video URL: {video_url}")
+                await page.click(
+                    "button:has(span:text-is('Create')), button:has(span:text-is('Создать'))"
+                )
 
-                await browser.close()
+                video_url = f"https://app.pixverse.ai/create?detail=show&id={video_id_future}&platform=web"
+                print(f"➡️ Переход к видео: {video_url}")
+                await page.goto(video_url, wait_until="domcontentloaded")
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(video_url) as resp:
+                print("⏬ Ожидание кнопки Download...")
+                await page.wait_for_selector(
+                    "button:has-text('Download'), button:has(span:text-is('Скачать'))",
+                    timeout=15000,
+                )
 
-                    class StreamFile:
-                        async def read(self, size: int = 1024 * 1024):
-                            return await resp.content.read(size)
+                print("📥 Кликаем по кнопке Download...")
+                async with page.expect_download(timeout=15000) as download_info:
+                    await page.click(
+                        "button:has-text('Download'), button:has(span:text-is('Скачать'))"
+                    )
+                print("📥 Скачивание...")
+                download = await download_info.value
 
-                    await self.file_adapter.write_file(video_filename, StreamFile())
+                await self.file_adapter.save_download(
+                    f"{video_id_future}.mp4", download
+                )
 
             outbox_data = build_outbox_event(
                 event_type="image2video.generated",
                 routing_key="main.events",
                 video_id=video_id,
                 status="ready",
-                extra_payload={"url": video_path},
+                extra_payload={"url": video_url},
             )
             await self.outbox_repository.save(outbox_data)
 

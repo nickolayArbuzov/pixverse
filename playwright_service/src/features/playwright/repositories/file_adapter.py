@@ -9,11 +9,9 @@ class FileAdapter:
         self.base_path = base_path
         os.makedirs(self.base_path, exist_ok=True)
 
-    async def write_file(self, filename: str, file: UploadFile) -> str:
+    async def save_download(self, filename: str, download_obj) -> str:
         path = os.path.join(self.base_path, filename)
-        async with aiofiles.open(path, "wb") as out_file:
-            while chunk := await file.read(1024 * 1024):
-                await out_file.write(chunk)
+        await download_obj.save_as(path)
         return path
 
     async def read_file(self, filename: str) -> AsyncGenerator[bytes, None]:

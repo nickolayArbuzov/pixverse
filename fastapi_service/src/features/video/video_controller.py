@@ -33,10 +33,8 @@ async def text_2_video(
     video_request: InputVideoTextRequest,
     db: AsyncSession = Depends(get_write_db),
 ):
-
     video_repo = VideoCommandRepository(db)
     outbox_repo = OutboxCommandRepository(db)
-
     command = Text2VideoCommand(video_request=video_request)
     use_case = Text2VideoUseCase(
         video_repository=video_repo,
@@ -68,10 +66,7 @@ async def GetStatusGenerate(
     video_id: int,
     db: AsyncSession = Depends(get_read_db),
 ):
-    print("status-------------------------", video_id)
-    """
     repo = VideoQueryRepository(db)
     query = GetStatusGenerateQuery(video_id=video_id)
     use_case = GetStatusGenerateUseCase(repo)
     return await use_case.execute(query)
-    """
