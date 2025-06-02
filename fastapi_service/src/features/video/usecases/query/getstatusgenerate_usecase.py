@@ -11,5 +11,5 @@ class GetStatusGenerateUseCase:
         self.video_repository = video_repository
 
     async def execute(self, query: GetStatusGenerateQuery):
-        video = await self.video_repository.GetStatusGenerate(query.video_id)
+        video = await self.video_repository.get_status_generate(query.video_id)
         return video

@@ -1,7 +1,7 @@
 from pathlib import Path
 import asyncio
 from playwright.async_api import async_playwright
-from src.common.helpers import catch_video_id
+from src.common.helpers.catch_video_id import catch_video_id
 from src.settings import pixverse_credentials
 from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.features.outbox.repositories import OutboxCommandRepository
@@ -35,10 +35,11 @@ class Text2VideoUseCase:
                         catch_video_id(res, video_id_future)
                     ),
                 )
+                print("🌐 Переход на сайт...")
                 await page.goto(
                     "https://app.pixverse.ai/onboard", wait_until="domcontentloaded"
                 )
-
+                print("🔐 Авторизация...")
                 await page.click(
                     "button:has(span:text-is('Login')), button:has(span:text-is('Вход'))"
                 )
@@ -47,17 +48,18 @@ class Text2VideoUseCase:
                 await page.click(
                     "button:has(span:text-is('Login')), button:has(span:text-is('Вход'))"
                 )
+                print("🔓 Login...")
                 await page.wait_for_selector("text=Create, text=Создать")
-
+                print("Ищем поле ввода...")
                 textarea = page.locator(
                     'textarea[placeholder="Describe the content you want to create"], textarea[placeholder="Опишите контент, который хотите создать"]'
                 )
                 await textarea.fill(prompt)
-
+                print("Заполняем...")
                 await page.click(
                     "button:has(span:text-is('Create')), button:has(span:text-is('Создать'))"
                 )
-
+                print("Видео создаётся")
                 video_url = f"https://app.pixverse.ai/create?detail=show&id={video_id_future}&platform=web"
                 print(f"➡️ Переход к видео: {video_url}")
                 await page.goto(video_url, wait_until="domcontentloaded")

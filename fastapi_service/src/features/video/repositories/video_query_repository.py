@@ -11,7 +11,11 @@ class VideoQueryRepository:
     async def get_status_generate(self, video_id: int) -> dict:
         result = (
             await self.session.execute(
-                (select(Video.id, Video.status, Video.url).where(Video.id == video_id))
+                (
+                    select(Video.id, Video.status, Video.video_url).where(
+                        Video.id == video_id
+                    )
+                )
             )
         ).first()
 
@@ -21,5 +25,5 @@ class VideoQueryRepository:
         return {
             "id": result.id,
             "status": result.status,
-            "url": result.url,
+            "video_url": result.video_url,
         }

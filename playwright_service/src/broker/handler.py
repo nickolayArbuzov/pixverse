@@ -1,6 +1,7 @@
 import json
 from aio_pika import IncomingMessage
 from src.features.outbox.repositories import OutboxCommandRepository
+from src.features.playwright.repositories import FileAdapter
 from src.dependencies import session_scope
 from src.database import AsyncSessionLocal
 from src.features.inbox.repositories import (
@@ -25,7 +26,7 @@ async def on_message(msg: IncomingMessage):
     async with msg.process(requeue=True):
         try:
             body = json.loads(msg.body)
-
+            print("body---------------------------", body)
             event_type = body.get("event_type")
             payload = body.get("payload")
             event_id = payload.get("event_id") if payload else None
@@ -48,7 +49,8 @@ async def on_message(msg: IncomingMessage):
                     usecase_class, command_class = usecase_entry
                     command = command_class(payload)
                     await usecase_class(
-                        outbox_repository=OutboxCommandRepository(session)
+                        outbox_repository=OutboxCommandRepository(session),
+                        file_adapter=FileAdapter(),
                     ).execute(command)
                 else:
                     print(f"Unknown event type: {event_type}")

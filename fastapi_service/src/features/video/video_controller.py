@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,8 +63,8 @@ async def image_2_video(
 
 
 @router.get("/status/{video_id}")
-async def GetStatusGenerate(
-    video_id: int,
+async def get_status_generate(
+    video_id: UUID,
     db: AsyncSession = Depends(get_read_db),
 ):
     repo = VideoQueryRepository(db)

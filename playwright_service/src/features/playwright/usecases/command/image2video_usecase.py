@@ -3,7 +3,7 @@ import asyncio
 import os
 import tempfile
 from playwright.async_api import async_playwright
-from src.common.helpers import catch_video_id
+from src.common.helpers.catch_video_id import catch_video_id
 from src.settings import pixverse_credentials
 from src.common.helpers.outbox_event_creater import build_outbox_event
 from src.features.outbox.repositories import OutboxCommandRepository

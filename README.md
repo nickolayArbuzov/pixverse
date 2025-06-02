@@ -51,8 +51,8 @@ docker-compose up
 
 ## <img src="https://static-00.iconduck.com/assets.00/swagger-icon-2048x2048-563qbzey.png" alt="Swagger" width="16" /> API Documentation
 
-- **Swagger UI** → [http://localhost:5000/docs](http://localhost:5000/docs)
-- **ReDoc** → [http://localhost:5000/redoc](http://localhost:5000/redoc)
+- **Swagger UI** → [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc** → [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ---
 
