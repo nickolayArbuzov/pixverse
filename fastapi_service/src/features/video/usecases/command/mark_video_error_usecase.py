@@ -1,7 +1,4 @@
-import uuid
 from src.features.video.repositories import VideoCommandRepository
-from src.features.video.video_schema import InputVideoTextRequest, VideoInDB
-from src.features.outbox.repositories import OutboxCommandRepository
 
 
 class MarkVideoErrorCommand:

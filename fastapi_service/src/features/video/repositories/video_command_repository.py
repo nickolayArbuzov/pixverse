@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import delete, update, insert
+from sqlalchemy import update, insert
 
 from src.features.video.video_schema import VideoInDB
 from src.features.video.video_model import Video
@@ -22,7 +22,7 @@ class VideoCommandRepository:
             (
                 update(Video)
                 .where(Video.id == video_id)
-                .values(status=status, url=url)
+                .values(status=status, video_url=url)
                 .execution_options(synchronize_session="fetch")
             )
         )

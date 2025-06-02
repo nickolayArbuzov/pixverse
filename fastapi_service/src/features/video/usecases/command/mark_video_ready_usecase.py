@@ -1,8 +1,4 @@
-import uuid
-from fastapi import UploadFile
-from src.features.video.repositories import VideoCommandRepository, FileAdapter
-from src.features.video.video_schema import InputVideoImageRequest, VideoInDB
-from src.features.outbox.repositories import OutboxCommandRepository
+from src.features.video.repositories import VideoCommandRepository
 
 
 class MarkVideoReadyCommand:

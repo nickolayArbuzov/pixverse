@@ -18,6 +18,8 @@ from src.features.inbox.inbox_model import InboxModel
 USECASE_MAP = {
     "text2video.generated": (MarkVideoReadyUseCase, MarkVideoReadyCommand),
     "text2video.failed": (MarkVideoErrorUseCase, MarkVideoErrorCommand),
+    "image2video.generated": (MarkVideoReadyUseCase, MarkVideoReadyCommand),
+    "image2video.failed": (MarkVideoErrorUseCase, MarkVideoErrorCommand),
 }
 
 

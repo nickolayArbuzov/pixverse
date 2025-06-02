@@ -26,7 +26,6 @@ async def on_message(msg: IncomingMessage):
     async with msg.process(requeue=True):
         try:
             body = json.loads(msg.body)
-            print("body---------------------------", body)
             event_type = body.get("event_type")
             payload = body.get("payload")
             event_id = payload.get("event_id") if payload else None
